@@ -1,0 +1,44 @@
+.bg-purple {
+    background-color: #6f42c1;
+  }
+  
+  .hover-effect {
+    transition: background-color 0.3s, transform 0.3s;
+  }
+  
+  .hover-effect:hover {
+    background-color: #c300ff;
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+  
+  .main-box {
+    background-color: #f8f9fa;
+    border-radius: 16px;
+  }
+  
+  /* Added for background image and transparency */
+  .landing-bg {
+    /* Use a linear gradient for black transparency and the background image */
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../image/812.jpg'); /* Replace with your background image path */
+    background-size: cover;
+    background-position: center;
+    /* opacity is removed to prevent making the content transparent */
+    opacity: 0.9; /* Adjust transparency as needed */
+  }
+  
+  /* Custom black-to-red gradient */
+  .bg-black-red-gradient {
+    background: linear-gradient(to right, black, red) !important; /* Use !important to override Bootstrap */
+    color: white; /* Ensure text is readable on the gradient */
+    border: none; /* Remove default button border */
+  }
+  
+  .text-black-force {
+    color: black !important;
+  }
+  
+  .border-black-force {
+    border-color: black !important;
+  }
+  

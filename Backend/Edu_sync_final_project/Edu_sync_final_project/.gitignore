@@ -1,0 +1,74 @@
+# .NET Core
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files
+.vs/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.ide
+*.idea/
+
+# Environment files
+appsettings.*.json
+!appsettings.json
+*.Development.json
+*.Production.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+packages/
+node_modules/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+# Visual Studio cache/options directory
+.vs/
+
+# Test Results
+TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Database files
+*.mdf
+*.ldf
+*.ndf
+
+# Temporary files
+*.tmp
+*.swp
+*~
+appsettings.json

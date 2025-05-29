@@ -1,0 +1,64 @@
+/* Global styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom gradient background */
+.bg-black-red-gradient {
+  background: linear-gradient(135deg, #000000 0%, #8B0000 100%);
+}
+
+/* Custom text colors */
+.text-black-force {
+  color: #000000 !important;
+}
+
+/* Custom border colors */
+.border-black-force {
+  border-color: #000000 !important;
+}
+
+/* Custom button styles */
+.btn-black-red-gradient {
+  background: linear-gradient(135deg, #000000 0%, #8B0000 100%);
+  color: white;
+  border: none;
+}
+
+.btn-black-red-gradient:hover {
+  background: linear-gradient(135deg, #1a1a1a 0%, #a00000 100%);
+  color: white;
+}
+
+/* Custom card styles */
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom form styles */
+.form-control:focus {
+  border-color: #8B0000;
+  box-shadow: 0 0 0 0.2rem rgba(139, 0, 0, 0.25);
+}
+
+/* Custom link styles */
+a {
+  color: #8B0000;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #a00000;
+  text-decoration: underline;
+} 
