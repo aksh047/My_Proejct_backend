@@ -1,24 +1,20 @@
 # azure-pipelines-backend.yml
-# This pipeline builds and deploys the ASP.NET Core backend to Azure App Service
-
-# Trigger the pipeline on pushes to the master branch
 trigger:
 - master
 
-# Use a Microsoft-hosted agent VM image
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
-  # Azure App Service Details
-  azureAppName: 'mywebapp047'
-  # Database connection string will be set in Azure App Service configuration
-  # Azure Storage connection string will be set in Azure App Service configuration
-ASPNETCORE_ENVIRONMENT: 'Production'
-ASPNETCORE_DETAILED_ERRORS: 'true'
+- name: buildConfiguration
+  value: 'Release'
+- name: azureAppName
+  value: 'mywebapp047'
+- name: ASPNETCORE_ENVIRONMENT
+  value: 'Production'
+- name: ASPNETCORE_DETAILED_ERRORS
+  value: 'true'
 
-# Define the steps (tasks) for the pipeline
 steps:
 - checkout: self
   clean: true
@@ -33,18 +29,18 @@ steps:
 - script: |
     ls -la
     pwd
-    cd Backend/Edu_sync_final_project/Edu_sync_final_project
-    dotnet restore
+    cd Backend/Edu_sync_final_project
+    dotnet restore Edu_sync_final_project.sln
   displayName: 'Restore Dependencies'
 
 - script: |
-    cd Backend/Edu_sync_final_project/Edu_sync_final_project
-    dotnet build --configuration $(buildConfiguration) --no-restore
+    cd Backend/Edu_sync_final_project
+    dotnet build Edu_sync_final_project.sln --configuration $(buildConfiguration) --no-restore
   displayName: 'Build .NET Project'
 
 - script: |
-    cd Backend/Edu_sync_final_project/Edu_sync_final_project
-    dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
+    cd Backend/Edu_sync_final_project
+    dotnet publish Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
   displayName: 'Publish .NET Project'
 
 - task: AzureWebApp@1
@@ -54,15 +50,16 @@ steps:
     appName: '$(azureAppName)'
     package: '$(Build.ArtifactStagingDirectory)'
     deploymentMethod: 'auto'
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
     appSettings: |
       -ASPNETCORE_ENVIRONMENT Production
       -ASPNETCORE_DETAILED_ERRORS true
       -WEBSITE_RUN_FROM_PACKAGE 1
       -WEBSITE_NODE_DEFAULT_VERSION ~18
     startupCommand: 'dotnet Edu_sync_final_project.dll'
-  displayName: 'Deploy to Azure App Service' 
+  displayName: 'Deploy to Azure App Service'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
