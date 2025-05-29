@@ -51,10 +51,10 @@ steps:
     package: '$(Build.ArtifactStagingDirectory)'
     deploymentMethod: 'auto'
     appSettings: |
-      ASPNETCORE_ENVIRONMENT: 'Production'
-      ASPNETCORE_DETAILED_ERRORS: 'true'
-      WEBSITE_RUN_FROM_PACKAGE: '1'
-      WEBSITE_NODE_DEFAULT_VERSION: '~18'
+      -key ASPNETCORE_ENVIRONMENT -value Production
+      -key ASPNETCORE_DETAILED_ERRORS -value true
+      -key WEBSITE_RUN_FROM_PACKAGE -value 1
+      -key WEBSITE_NODE_DEFAULT_VERSION -value 18
     startupCommand: 'dotnet Edu_sync_final_project.dll'
 
 - task: PublishBuildArtifacts@1
