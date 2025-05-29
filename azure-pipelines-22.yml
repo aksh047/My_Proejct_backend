@@ -1,0 +1,59 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- name: buildConfiguration
+  value: 'Release'
+- name: azureAppName
+  value: 'mywebapp047'
+- name: ASPNETCORE_ENVIRONMENT
+  value: 'Production'
+- name: ASPNETCORE_DETAILED_ERRORS
+  value: 'true'
+
+steps:
+- checkout: self
+  clean: true
+  fetchDepth: 1
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+  displayName: 'Install .NET SDK'
+
+- script: |
+    ls -la
+    pwd
+    cd Edu_sync_final_project
+    dotnet restore Edu_sync_final_project.sln
+  displayName: 'Restore Dependencies'
+
+- script: |
+    cd Edu_sync_final_project
+    dotnet build Edu_sync_final_project.sln --configuration $(buildConfiguration) --no-restore
+  displayName: 'Build .NET Project'
+
+- script: |
+    cd Edu_sync_final_project
+    dotnet publish Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
+  displayName: 'Publish .NET Project'
+
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: 'AzureConnection047'
+    appType: 'webApp'
+    appName: '$(azureAppName)'
+    package: '$(Build.ArtifactStagingDirectory)'
+    deploymentMethod: 'auto'
+    startupCommand: 'dotnet Edu_sync_final_project.dll'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
