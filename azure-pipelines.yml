@@ -1,4 +1,3 @@
-# azure-pipelines-backend.yml
 trigger:
 - master
 
@@ -29,21 +28,22 @@ steps:
 - script: |
     ls -la
     pwd
-    cd Backend/Edu_sync_final_project
+    cd Edu_sync_final_project
     dotnet restore Edu_sync_final_project.sln
   displayName: 'Restore Dependencies'
 
 - script: |
-    cd Backend/Edu_sync_final_project
+    cd Edu_sync_final_project
     dotnet build Edu_sync_final_project.sln --configuration $(buildConfiguration) --no-restore
   displayName: 'Build .NET Project'
 
 - script: |
-    cd Backend/Edu_sync_final_project
+    cd Edu_sync_final_project
     dotnet publish Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
   displayName: 'Publish .NET Project'
 
 - task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
   inputs:
     azureSubscription: 'AzureConnection047'
     appType: 'webApp'
@@ -51,12 +51,11 @@ steps:
     package: '$(Build.ArtifactStagingDirectory)'
     deploymentMethod: 'auto'
     appSettings: |
-      -ASPNETCORE_ENVIRONMENT Production
-      -ASPNETCORE_DETAILED_ERRORS true
-      -WEBSITE_RUN_FROM_PACKAGE 1
-      -WEBSITE_NODE_DEFAULT_VERSION ~18
+      ASPNETCORE_ENVIRONMENT: 'Production'
+      ASPNETCORE_DETAILED_ERRORS: 'true'
+      WEBSITE_RUN_FROM_PACKAGE: '1'
+      WEBSITE_NODE_DEFAULT_VERSION: '~18'
     startupCommand: 'dotnet Edu_sync_final_project.dll'
-  displayName: 'Deploy to Azure App Service'
 
 - task: PublishBuildArtifacts@1
   inputs:
