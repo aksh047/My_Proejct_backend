@@ -42,6 +42,13 @@ steps:
     dotnet publish Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
   displayName: 'Publish .NET Project'
 
+- script: |
+    echo "Checking published artifact directory: $(Build.ArtifactStagingDirectory)"
+    ls -la $(Build.ArtifactStagingDirectory)
+    echo "Contents of web.config:"
+    cat $(Build.ArtifactStagingDirectory)/web.config
+  displayName: 'Verify Published Files'
+
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
   inputs:
@@ -50,11 +57,6 @@ steps:
     appName: '$(azureAppName)'
     package: '$(Build.ArtifactStagingDirectory)'
     deploymentMethod: 'auto'
-    appSettings: |
-      -key ASPNETCORE_ENVIRONMENT -value Production
-      -key ASPNETCORE_DETAILED_ERRORS -value true
-      -key WEBSITE_RUN_FROM_PACKAGE -value 1
-      -key WEBSITE_NODE_DEFAULT_VERSION -value 18
     startupCommand: 'dotnet Edu_sync_final_project.dll'
 
 - task: PublishBuildArtifacts@1
