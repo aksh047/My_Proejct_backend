@@ -54,6 +54,11 @@ steps:
     appName: '$(azureAppName)'
     package: '$(Build.ArtifactStagingDirectory)'
     deploymentMethod: 'auto'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
     appSettings: |
       -ASPNETCORE_ENVIRONMENT Production
       -ASPNETCORE_DETAILED_ERRORS true
