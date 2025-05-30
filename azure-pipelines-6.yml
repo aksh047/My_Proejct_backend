@@ -1,0 +1,68 @@
+# azure-pipelines-backend.yml
+# This pipeline builds and deploys the ASP.NET Core backend to Azure App Service
+
+# Trigger the pipeline on pushes to the master branch
+trigger:
+- master
+
+# Use a Microsoft-hosted agent VM image
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  # Azure App Service Details
+  azureAppName: 'mywebapp047'
+  # Database connection string will be set in Azure App Service configuration
+  # Azure Storage connection string will be set in Azure App Service configuration
+
+# Define the steps (tasks) for the pipeline
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+  displayName: 'Install .NET SDK'
+
+- script: |
+    cd Backend/Edu_sync_final_project/Edu_sync_final_project
+    dotnet restore
+  displayName: 'Restore Dependencies'
+
+- script: |
+    cd Backend/Edu_sync_final_project/Edu_sync_final_project
+    dotnet build --configuration $(buildConfiguration) --no-restore
+  displayName: 'Build .NET Project'
+
+- script: |
+    cd Backend/Edu_sync_final_project/Edu_sync_final_project
+    dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
+  displayName: 'Publish .NET Project'
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'AzureConnection047'
+    appType: 'webApp'
+    appName: '$(azureAppName)'
+    package: '$(Build.ArtifactStagingDirectory)'
+    deploymentMethod: 'auto'
+  displayName: 'Deploy to Azure App Service' 
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'AzureConnection047'
+    appType: 'webApp'
+    appName: '$(azureAppName)'
+    package: '$(Build.ArtifactStagingDirectory)'
+    deploymentMethod: 'auto'
+    appSettings: |
+      -ASPNETCORE_ENVIRONMENT Production
+      -ASPNETCORE_DETAILED_ERRORS true
+      -WEBSITE_RUN_FROM_PACKAGE 1
+      -WEBSITE_NODE_DEFAULT_VERSION ~18
+    startupCommand: 'dotnet Edu_sync_final_project.dll'
+  displayName: 'Deploy to Azure App Service' 
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
