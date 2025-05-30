@@ -62,7 +62,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add Azure Blob Service
 builder.Services.AddSingleton(new AzureBlobService(
-    builder.Configuration.GetConnectionString("AzureStorage:ConnectionString"),
+    builder.Configuration.GetConnectionString("AzureStorage"),
     builder.Configuration["AzureStorage:ContainerName"]
 ));
 
