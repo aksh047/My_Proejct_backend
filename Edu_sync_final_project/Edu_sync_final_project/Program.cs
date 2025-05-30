@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.SetIsOriginAllowed(origin => true)
+        policy.WithOrigins("https://icy-cliff-051462600.6.azurestaticapps.net/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
