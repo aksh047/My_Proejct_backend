@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://icy-cliff-051462600.6.azurestaticapps.net")
+        policy.SetIsOriginAllowed(origin => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -25,6 +25,7 @@ builder.Services.AddCors(options =>
 });
 
 // Add Swagger/OpenAPI with JWT support
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -62,7 +63,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add Azure Blob Service
 builder.Services.AddSingleton(new AzureBlobService(
-    builder.Configuration.GetConnectionString("AzureStorage"),
+    builder.Configuration.GetConnectionString("AzureStorage:ConnectionString"),
     builder.Configuration["AzureStorage:ContainerName"]
 ));
 
