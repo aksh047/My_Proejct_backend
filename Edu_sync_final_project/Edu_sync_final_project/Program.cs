@@ -25,6 +25,7 @@ builder.Services.AddCors(options =>
 });
 
 // Add Swagger/OpenAPI with JWT support
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

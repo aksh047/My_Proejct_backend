@@ -1,0 +1,31 @@
+trigger:
+  branches:
+    include:
+      - master
+      - main
+  paths:
+    include:
+      - Frontend/**
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: NODE_VERSION
+    value: '18.x'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '$(NODE_VERSION)'
+  displayName: 'Install Node.js'
+
+- script: |
+    cd Frontend
+    npm install
+  displayName: 'npm install'
+
+- script: |
+    cd Frontend
+    npm run build
+  displayName: 'npm build' 

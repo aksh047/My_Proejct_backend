@@ -1,0 +1,41 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# azure-pipelines-frontend.yml
+# This pipeline builds and deploys the React frontend to Azure Static Web Apps
+
+# Trigger the pipeline on pushes to the master branch
+trigger:
+- master
+
+# Use a Microsoft-hosted agent VM image
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Define variables
+variables:
+  # Azure Static Web App Details
+  staticWebAppName: 'mystaticwebapp047'
+
+# Define the steps (tasks) for the pipeline
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    cd Frontend
+    npm install
+    npm run build
+  displayName: 'Build React App'
+
+- task: AzureStaticWebApp@0
+  inputs:
+    # Paths based on your React project structure
+    app_location: 'Frontend'
+    output_location: 'build'
+    azure_static_web_apps_api_token: $(deployment_token)
+  displayName: 'Deploy to Azure Static Web Apps' 
