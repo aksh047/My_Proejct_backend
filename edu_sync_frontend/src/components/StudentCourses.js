@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function StudentCourses() {
   const [courses, setCourses] = useState([]);
@@ -12,7 +14,7 @@ export default function StudentCourses() {
     const fetchCourses = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://localhost:7120/api/CourseModels', {
+        const response = await api.get('/api/CourseModels', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCourses(response.data);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { api } from '../services/api';
 
 export default function StudentGrades() {
   const [results, setResults] = useState([]);
@@ -48,7 +49,7 @@ export default function StudentGrades() {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`https://localhost:7120/api/ResultModels/user/${studentId}`, {
+      const response = await api.get(`/api/ResultModels/user/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -59,7 +60,7 @@ export default function StudentGrades() {
       
       // Fetch quiz details for each result
       const quizPromises = response.data.map(result => 
-        axios.get(`https://localhost:7120/api/AssessmentModels/${result.assessmentId}`, {
+        api.get(`/api/AssessmentModels/${result.assessmentId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       );

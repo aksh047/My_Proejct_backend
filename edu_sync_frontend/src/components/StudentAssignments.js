@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { api } from '../services/api';
 
 export default function StudentAssignments() {
   const [courses, setCourses] = useState([]);
@@ -50,7 +51,7 @@ export default function StudentAssignments() {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://localhost:7120/api/CourseModels', {
+      const response = await api.get('/api/CourseModels', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses(response.data);
@@ -63,7 +64,7 @@ export default function StudentAssignments() {
   const fetchAssignments = async (courseId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`https://localhost:7120/api/AssessmentModels/course/${courseId}`, {
+      const response = await api.get(`/api/AssessmentModels/course/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -137,7 +138,7 @@ export default function StudentAssignments() {
         attemptDate: new Date().toISOString()
       };
 
-      await axios.post('https://localhost:7120/api/ResultModels', data, {
+      await api.post('/api/ResultModels', data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

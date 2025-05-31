@@ -1,7 +1,7 @@
 // src/api.js
 import axios from 'axios';
 
-const API_BASE_URL = 'https://localhost:7120';
+const API_BASE_URL = 'https://mywebapp047.azurewebsites.net';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -10,6 +10,8 @@ const api = axios.create({
     },
     withCredentials: true // Add this line
 });
+
+export { api }; // Add this line to export the api instance
 
 export const registerUser = async (userData) => {
     try {

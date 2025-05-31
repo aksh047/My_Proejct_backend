@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { api } from '../services/api';
 
 export default function InstructorAssignments() {
   const [courses, setCourses] = useState([]);
@@ -80,9 +81,9 @@ export default function InstructorAssignments() {
         return;
       }
       // Assuming you want all courses for the instructor
-      const apiUrl = `https://localhost:7120/api/CourseModels/instructor/${instructorId}`;
+      const apiUrl = `/api/CourseModels/instructor/${instructorId}`;
       console.log('Fetching courses from URL:', apiUrl);
-      const response = await axios.get(apiUrl, {
+      const response = await api.get(apiUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('Course fetch API response status:', response.status);
@@ -130,9 +131,9 @@ export default function InstructorAssignments() {
          console.error('fetchAssignments skipped: Token missing.');
          return;
        }
-      const apiUrl = `https://localhost:7120/api/AssessmentModels/course/${courseId}`;
+      const apiUrl = `/api/AssessmentModels/course/${courseId}`;
       console.log('Fetching assignments from URL:', apiUrl);
-      const response = await axios.get(apiUrl, {
+      const response = await api.get(apiUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -240,11 +241,11 @@ export default function InstructorAssignments() {
         questions: JSON.stringify(assignmentData.questions)
       };
       if (editingAssignment) {
-        await axios.put(`https://localhost:7120/api/AssessmentModels/${editingAssignment.assessmentId}`, data, {
+        await api.put(`/api/AssessmentModels/${editingAssignment.assessmentId}`, data, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.post('https://localhost:7120/api/AssessmentModels', data, {
+        await api.post('/api/AssessmentModels', data, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -298,10 +299,10 @@ export default function InstructorAssignments() {
         return;
       }
       // Assuming the backend endpoint for deleting an assessment is /api/AssessmentModels/{assessmentId}
-      const apiUrl = `https://localhost:7120/api/AssessmentModels/${assessmentId}`;
+      const apiUrl = `/api/AssessmentModels/${assessmentId}`;
       console.log('Deleting assignment from URL:', apiUrl);
       
-      await axios.delete(apiUrl, {
+      await api.delete(apiUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

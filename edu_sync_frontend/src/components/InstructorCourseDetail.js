@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { api } from '../services/api';
 
 export default function InstructorCourseDetail() {
   const { courseId } = useParams();
@@ -59,7 +60,7 @@ export default function InstructorCourseDetail() {
 
         // Fetch course details
         console.log('InstructorCourseDetail: fetchDetails - Fetching course details for courseId:', courseId);
-        const courseResponse = await axios.get(`https://localhost:7120/api/CourseModels/${courseId}`, {
+        const courseResponse = await api.get(`/api/CourseModels/${courseId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('InstructorCourseDetail: fetchDetails - Course API response:', courseResponse);
@@ -75,7 +76,7 @@ export default function InstructorCourseDetail() {
 
         // Fetch assignments (assessments) for the course
         console.log('InstructorCourseDetail: fetchDetails - Fetching assignments for courseId:', courseId);
-        const assignmentsResponse = await axios.get(`https://localhost:7120/api/AssessmentModels/course/${courseId}`, {
+        const assignmentsResponse = await api.get(`/api/AssessmentModels/course/${courseId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
          console.log('InstructorCourseDetail: fetchDetails - Assignments API response:', assignmentsResponse);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { api } from '../services/api';
 
 export default function InstructorStudents() {
   const [courses, setCourses] = useState([]);
@@ -59,9 +60,7 @@ export default function InstructorStudents() {
           setLoadingCourses(false);
           return;
         }
-        const apiUrl = `https://localhost:7120/api/CourseModels/instructor/${instructorId}`;
-        console.log('Fetching courses from URL:', apiUrl);
-        const response = await axios.get(apiUrl, {
+        const response = await api.get(`/api/CourseModels/instructor/${instructorId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log('Courses fetch API response status:', response.status);
@@ -112,10 +111,7 @@ export default function InstructorStudents() {
       setError(null);
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(
-          `https://localhost:7120/api/ResultModels/course/${selectedCourse.courseId}/instructor`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await api.get(`/api/ResultModels/course/${selectedCourse.courseId}/instructor`, { headers: { Authorization: `Bearer ${token}` } });
 
         const results = response.data;
 
@@ -133,7 +129,7 @@ export default function InstructorStudents() {
             const uniqueAssessmentIds = [...new Set(results.map(r => r.assessmentId))];
             // Fetch assessment details to get titles
             const assessmentDetailsPromises = uniqueAssessmentIds.map(id =>
-                 axios.get(`https://localhost:7120/api/AssessmentModels/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+                 api.get(`/api/AssessmentModels/${id}`, { headers: { Authorization: `Bearer ${token}` } })
             );
              const assessmentDetailsResponses = await Promise.all(assessmentDetailsPromises);
              const assessmentList = assessmentDetailsResponses.map(res => res.data);

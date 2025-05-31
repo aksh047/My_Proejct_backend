@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { api } from '../services/api';
 // Import the login image
 import loginImage from '../image/undraw_mobile-login_4ntr.png';
 
@@ -40,7 +41,7 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      const response = await axios.post("https://localhost:7120/api/auth/login", formData);
+      const response = await api.post("/api/auth/login", formData);
       console.log("Full login response:", response);
       console.log("Response data:", response.data);
       

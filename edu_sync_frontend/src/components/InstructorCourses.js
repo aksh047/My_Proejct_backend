@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function InstructorCourses() {
   const [courses, setCourses] = useState([]);
@@ -58,9 +59,7 @@ export default function InstructorCourses() {
         setError('Instructor ID or token missing.');
         return;
       }
-      const apiUrl = `https://localhost:7120/api/CourseModels/instructor/${instructorId}`;
-      console.log('Fetching courses from URL:', apiUrl);
-      const response = await axios.get(apiUrl, {
+      const response = await api.get(`/api/CourseModels/instructor/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('Course fetch API response status:', response.status);
@@ -127,25 +126,23 @@ export default function InstructorCourses() {
       }
 
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('instructorId', instructorId);
+      formDataToSend.append('CourseId', editingCourseId);
+      formDataToSend.append('Title', formData.title);
+      formDataToSend.append('Description', formData.description);
+      formDataToSend.append('InstructorId', instructorId);
       if (selectedFile) {
         formDataToSend.append('file', selectedFile);
       }
 
       if (editingCourseId) {
         console.log('handleAddOrEditCourse: Editing course', editingCourseId);
-        const response = await axios.put(
-          `https://localhost:7120/api/CourseModels/${editingCourseId}`,
-          formDataToSend,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        formDataToSend.append('CourseId', editingCourseId);
+        const response = await api.put(`/api/CourseModels/${editingCourseId}`, formDataToSend, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
         if (response.status === 200 || response.status === 204) {
           alert('✅ Course updated successfully!');
           console.log('handleAddOrEditCourse: Update successful', response);
@@ -155,16 +152,12 @@ export default function InstructorCourses() {
         }
       } else {
         console.log('handleAddOrEditCourse: Adding new course');
-        const response = await axios.post(
-          'https://localhost:7120/api/CourseModels',
-          formDataToSend,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        const response = await api.post('/api/CourseModels', formDataToSend, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
         if (response.status === 200 || response.status === 201) {
           alert('✅ Course added successfully!');
           console.log('handleAddOrEditCourse: Add successful', response);
@@ -190,7 +183,7 @@ export default function InstructorCourses() {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://localhost:7120/api/CourseModels/${courseId}`, {
+      await api.delete(`/api/CourseModels/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses(courses.filter((course) => course.courseId !== courseId));
