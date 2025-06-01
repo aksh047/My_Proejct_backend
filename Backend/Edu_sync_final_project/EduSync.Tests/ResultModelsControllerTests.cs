@@ -19,6 +19,7 @@ namespace EduSync.Tests
         private ResultModelsController _controller;
         private AppDbContext _context;
         private Mock<IConfiguration> _mockConfiguration;
+        private Mock<EventHubService> _mockEventHubService;
 
         [SetUp]
         public void Setup()
@@ -28,8 +29,17 @@ namespace EduSync.Tests
                 .Options;
 
             _mockConfiguration = new Mock<IConfiguration>();
+
+            // Mocking the ILogger dependency for EventHubService
+            var mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<EventHubService>>();
+
+            // Initialize the mock EventHubService with its dependencies (mocked IConfiguration and ILogger)
+            _mockEventHubService = new Mock<EventHubService>(_mockConfiguration.Object, mockLogger.Object);
+
             _context = new AppDbContext(options, _mockConfiguration.Object);
-            _controller = new ResultModelsController(_context);
+
+            // Pass both the context and the mock EventHubService to the controller constructor
+            _controller = new ResultModelsController(_context, _mockEventHubService.Object);
         }
 
         [TearDown]
