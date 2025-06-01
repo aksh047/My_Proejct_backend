@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.SetIsOriginAllowed(origin => true)
+        policy.WithOrigins("https://icy-cliff-051462600.6.azurestaticapps.net")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -63,7 +63,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add Azure Blob Service
 builder.Services.AddSingleton(new AzureBlobService(
-    builder.Configuration.GetConnectionString("AzureStorage:ConnectionString"),
+    builder.Configuration.GetConnectionString("AzureStorage"),
     builder.Configuration["AzureStorage:ContainerName"]
 ));
 
