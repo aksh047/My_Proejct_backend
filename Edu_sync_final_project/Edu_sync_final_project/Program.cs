@@ -67,6 +67,10 @@ builder.Services.AddSingleton(new AzureBlobService(
     builder.Configuration["AzureStorage:ContainerName"]
 ));
 
+// Add Event Hubs Service
+builder.Services.AddSingleton<EventHubService>();
+
+
 // JWT Authentication configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
