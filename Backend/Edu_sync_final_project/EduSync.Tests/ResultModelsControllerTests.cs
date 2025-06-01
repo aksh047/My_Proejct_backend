@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using NUnit.Framework;
+using Edu_sync_final_project.Services;
 
 namespace EduSync.Tests
 {
