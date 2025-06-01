@@ -28,18 +28,15 @@ steps:
 - script: |
     ls -la
     pwd
-    cd Backend/Edu_sync_final_project
-    dotnet restore Edu_sync_final_project.sln
+    dotnet restore Backend/Edu_sync_final_project/Edu_sync_final_project.sln
   displayName: 'Restore Dependencies'
 
 - script: |
-    cd Backend/Edu_sync_final_project
-    dotnet build Edu_sync_final_project.sln --configuration $(buildConfiguration) --no-restore
+    dotnet build Backend/Edu_sync_final_project/Edu_sync_final_project.sln --configuration $(buildConfiguration) --no-restore
   displayName: 'Build .NET Project'
 
 - script: |
-    cd Backend/Edu_sync_final_project
-    dotnet publish Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
+    dotnet publish Backend/Edu_sync_final_project/Edu_sync_final_project.sln -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
   displayName: 'Publish .NET Project'
 
 - script: |
