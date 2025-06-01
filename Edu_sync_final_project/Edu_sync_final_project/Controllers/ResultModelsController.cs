@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Edu_sync_final_project.Data;
 using Edu_sync_final_project.Models;
 using Edu_sync_final_project.DTO;
 using System.Linq;
+using Edu_sync_final_project.Services;
 
 namespace Edu_sync_final_project.Controllers
 {
@@ -12,10 +13,12 @@ namespace Edu_sync_final_project.Controllers
     public class ResultModelsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly EventHubService _eventHubService;
 
-        public ResultModelsController(AppDbContext context)
+        public ResultModelsController(AppDbContext context, EventHubService eventHubService)
         {
             _context = context;
+            _eventHubService = eventHubService;
         }
 
         // GET: api/ResultModels
@@ -145,6 +148,10 @@ namespace Edu_sync_final_project.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Send event to Event Hubs after successful save
+                var eventData = new { orignalResult.ResultId, orignalResult.AssessmentId, orignalResult.UserId, orignalResult.Score, orignalResult.AttemptDate };
+                await _eventHubService.SendEventAsync(eventData, "ResultSubmitted");
             }
             catch (DbUpdateException)
             {
