@@ -1,281 +1,216 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Linq;
-using Edu_sync_final_project.Data;    
-using Edu_sync_final_project.Models; 
-using Edu_sync_final_project.DTO;   
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using System.ComponentModel.DataAnnotations;
+using Edu_sync_final_project.Data;
+using Edu_sync_final_project.Models;
+using Edu_sync_final_project.DTO;
+using Edu_sync_final_project.Services;
 
-namespace Edu_sync_final_project.Controllers;
-
-[ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
+namespace Edu_sync_final_project.Controllers
 {
-    private readonly IConfiguration _configuration;
-    private readonly AppDbContext _context;  // Your EF DbContext
-
-    public AuthController(IConfiguration configuration, AppDbContext context)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CourseModelsController : ControllerBase
     {
-        _configuration = configuration;
-        _context = context;
-    }
+        private readonly AppDbContext _context;
+        private readonly AzureBlobService _blobService;
 
-    
-    public class LoginRequest
-    {
-        [Required]
-        [EmailAddress]
-        public required string Email { get; set; }
-        [Required]
-        public required string Password { get; set; }
-    }
-
-   
-    public class RegisterUserDto
-    {
-        [Required]
-        public required string FullName { get; set; }
-        [Required]
-        [EmailAddress]
-        public required string Email { get; set; }
-        [Required]
-        public required string Password { get; set; }
-        [Required]
-        public required string Role { get; set; }  
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        try
+        public CourseModelsController(AppDbContext context, AzureBlobService blobService)
         {
-            Console.WriteLine($"Login attempt for email: {request.Email}");
-            
-            var user = await _context.UserModels.SingleOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null)
-            {
-                Console.WriteLine("User not found");
-                return Unauthorized("Invalid credentials");
-            }
-
-            Console.WriteLine($"User found: {user.Email}, Role: {user.Role}");
-            Console.WriteLine($"Stored salt length: {user.PasswordSalt?.Length ?? 0}");
-
-            // Verify password
-            if (!VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
-            {
-                Console.WriteLine("Password verification failed");
-                return Unauthorized("Invalid credentials");
-            }
-
-            Console.WriteLine("Password verified successfully");
-            var token = GenerateJwtToken(user.Email, user.Role);
-            Console.WriteLine("Token generated successfully");
-            
-            return Ok(new { token });
+            _context = context;
+            _blobService = blobService;
         }
-        catch (Exception ex)
+
+        // GET: api/CourseModels
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CourseModel>>> GetCourseModels([FromQuery] Guid? instructorId)
         {
-            Console.WriteLine($"Login error: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return StatusCode(500, "An error occurred during login");
+            if (instructorId.HasValue)
+            {
+                return await _context.CourseModels
+                    .Where(c => c.InstructorId == instructorId.Value)
+                    .ToListAsync();
+            }
+            return await _context.CourseModels.ToListAsync();
         }
-    }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
-    {
-        try
+        // GET: api/CourseModels/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CourseModel>> GetCourseModel(Guid id)
         {
-            Console.WriteLine($"Registration attempt for email: {dto.Email}");
+            var courseModel = await _context.CourseModels.FindAsync(id);
 
-            if (string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Password) || string.IsNullOrEmpty(dto.Role))
+            if (courseModel == null)
             {
-                Console.WriteLine("Missing required fields");
-                return BadRequest(new { message = "Missing required fields" });
-            }
-
-            // Validate password strength
-            if (dto.Password.Length < 8)
-            {
-                Console.WriteLine("Password too short");
-                return BadRequest(new { message = "Password must be at least 8 characters long" });
-            }
-            
-            if (!dto.Password.Any(char.IsUpper))
-            {
-                Console.WriteLine("Password missing uppercase");
-                return BadRequest(new { message = "Password must contain at least one uppercase letter" });
-            }
-            
-            if (!dto.Password.Any(char.IsLower))
-            {
-                Console.WriteLine("Password missing lowercase");
-                return BadRequest(new { message = "Password must contain at least one lowercase letter" });
-            }
-            
-            if (!dto.Password.Any(char.IsDigit))
-            {
-                Console.WriteLine("Password missing number");
-                return BadRequest(new { message = "Password must contain at least one number" });
+                return NotFound();
             }
 
-            // Validate email format
-            try
+            return courseModel;
+        }
+
+        [HttpGet("instructor/{instructorId}")]
+        public async Task<ActionResult<IEnumerable<CourseModel>>> GetCoursesByInstructor(Guid instructorId)
+        {
+            var courses = await _context.CourseModels
+                .Where(c => c.InstructorId == instructorId)
+                .ToListAsync();
+
+            if (courses == null || courses.Count == 0)
             {
-                var addr = new System.Net.Mail.MailAddress(dto.Email);
-                if (addr.Address != dto.Email)
+                return NotFound("No courses found for this instructor.");
+            }
+
+            return courses;
+        }
+
+        // POST: api/CourseModels
+        [HttpPost]
+        public async Task<ActionResult<CourseModel>> PostCourse([FromForm] CourseModelDTO courseModel, IFormFile file)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (courseModel == null)
+                return BadRequest("Course model cannot be null");
+
+            // Generate a new CourseId
+            courseModel.CourseId = Guid.NewGuid();
+
+            string? blobUrl = null;
+            if (file != null)
+            {
+                try
                 {
-                    Console.WriteLine("Invalid email format");
-                    return BadRequest(new { message = "Invalid email format" });
+                    Console.WriteLine($"Uploading file for course {courseModel.CourseId}");
+                    blobUrl = await _blobService.UploadFileAsync(file, courseModel.CourseId.ToString());
+                    Console.WriteLine($"File uploaded successfully. Blob URL: {blobUrl}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error uploading file: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    return BadRequest($"Error uploading file: {ex.Message}");
                 }
             }
-            catch
-            {
-                Console.WriteLine("Invalid email format");
-                return BadRequest(new { message = "Invalid email format" });
-            }
 
-            // Validate role
-            if (dto.Role != "Student" && dto.Role != "Instructor")
+            var course = new CourseModel
             {
-                Console.WriteLine("Invalid role");
-                return BadRequest(new { message = "Invalid role. Role must be either 'Student' or 'Instructor'" });
-            }
-
-            var userExists = await _context.UserModels.AnyAsync(u => u.Email == dto.Email);
-            if (userExists)
-            {
-                Console.WriteLine("Email already registered");
-                return BadRequest(new { message = "Email already registered" });
-            }
-
-            // Generate salt
-            byte[] salt = new byte[128 / 8];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-
-            // Hash password with salt
-            var hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: dto.Password,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 10000,
-                numBytesRequested: 256 / 8));
-
-            var user = new UserModel
-            {
-                Name = dto.FullName,
-                Email = dto.Email,
-                PasswordHash = hashed,
-                PasswordSalt = salt,
-                Role = dto.Role
+                CourseId = courseModel.CourseId,
+                Title = courseModel.Title ?? string.Empty,
+                Description = courseModel.Description ?? string.Empty,
+                InstructorId = courseModel.InstructorId,
+                MediaUrl = blobUrl
             };
 
-            _context.UserModels.Add(user);
+            _context.CourseModels.Add(course);
             await _context.SaveChangesAsync();
 
-            Console.WriteLine($"User registered successfully: {dto.Email}");
+            return CreatedAtAction("GetCourseModel", new { id = course.CourseId }, course);
+        }
 
-            // Generate token after successful registration
-            var token = GenerateJwtToken(user.Email, user.Role);
-            Console.WriteLine($"Token generated: {token}");
-
-            var response = new
+        // PUT: api/CourseModels/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCourse(Guid id, [FromForm] CourseModelDTO courseModel, IFormFile file)
+        {
+            if (id != courseModel.CourseId)
             {
-                success = true,
-                message = "User registered successfully",
-                data = new
+                return BadRequest();
+            }
+
+            var existingCourse = await _context.CourseModels.FindAsync(id);
+            if (existingCourse == null)
+            {
+                return NotFound();
+            }
+
+            string blobUrl = null;
+            if (file != null)
+            {
+                try
                 {
-                    token = token,
-                    user = new
+                    // Delete old file if exists
+                    if (!string.IsNullOrEmpty(existingCourse.MediaUrl))
                     {
-                        email = user.Email,
-                        role = user.Role,
-                        name = user.Name
+                        await _blobService.DeleteFileAsync(existingCourse.MediaUrl);
                     }
+
+                    // Upload new file
+                    blobUrl = await _blobService.UploadFileAsync(file, id.ToString());
                 }
-            };
+                catch (Exception ex)
+                {
+                    return BadRequest($"Error handling file: {ex.Message}");
+                }
+            }
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Registration error: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return StatusCode(500, new { 
-                success = false,
-                message = "An error occurred during registration",
-                error = ex.Message
-            });
-        }
-    }
+            existingCourse.Title = courseModel.Title;
+            existingCourse.Description = courseModel.Description;
+            existingCourse.MediaUrl = blobUrl ?? existingCourse.MediaUrl;
 
-    private string GenerateJwtToken(string email, string role)
-    {
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(role))
-        {
-            throw new ArgumentException("Email and role cannot be null or empty");
-        }
-        
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.Name, email) 
-        };
+            _context.Entry(existingCourse).State = EntityState.Modified;
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
-            throw new InvalidOperationException("JWT key is missing")));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CourseModelExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddDays(7), // Token valid for 7 days
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private bool VerifyPassword(string enteredPassword, string storedHash, byte[] storedSalt)
-    {
-        if (string.IsNullOrEmpty(enteredPassword) || string.IsNullOrEmpty(storedHash) || storedSalt == null)
-        {
-            return false;
+            return NoContent();
         }
 
-        try
+        // DELETE: api/CourseModels/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCourseModel(Guid id)
         {
-            var enteredHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: enteredPassword,
-                salt: storedSalt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 10000,
-                numBytesRequested: 256 / 8));
+            try
+            {
+                var courseModel = await _context.CourseModels
+                    .Include(c => c.AssessmentModels)
+                    .FirstOrDefaultAsync(c => c.CourseId == id);
 
-            Console.WriteLine($"Stored hash: {storedHash}");
-            Console.WriteLine($"Entered hash: {enteredHash}");
-            
-            return enteredHash == storedHash;
+                if (courseModel == null)
+                {
+                    return NotFound();
+                }
+
+                // Delete associated assessments first
+                if (courseModel.AssessmentModels != null)
+                {
+                    _context.AssessmentModels.RemoveRange(courseModel.AssessmentModels);
+                }
+
+                // Delete the course
+                _context.CourseModels.Remove(courseModel);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Error deleting course: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, "An error occurred while deleting the course. Please try again later.");
+            }
         }
-        catch (Exception ex)
+
+        private bool CourseModelExists(Guid id)
         {
-            Console.WriteLine($"Error verifying password: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
-            return false;
+            return _context.CourseModels.Any(e => e.CourseId == id);
         }
     }
 }
