@@ -127,7 +127,7 @@ namespace Edu_sync_final_project.Controllers
                 return NotFound();
             }
 
-            string blobUrl = null;
+            string? blobUrl = null;
             if (file != null)
             {
                 try
