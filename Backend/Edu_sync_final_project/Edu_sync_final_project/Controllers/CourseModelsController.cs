@@ -180,6 +180,7 @@ namespace Edu_sync_final_project.Controllers
             {
                 var courseModel = await _context.CourseModels
                     .Include(c => c.AssessmentModels)
+                    .ThenInclude(a => a.ResultModels) // Include results for each assessment
                     .FirstOrDefaultAsync(c => c.CourseId == id);
 
                 if (courseModel == null)
@@ -187,10 +188,31 @@ namespace Edu_sync_final_project.Controllers
                     return NotFound();
                 }
 
-                // Delete associated assessments first
+                // Delete associated results for each assessment
                 if (courseModel.AssessmentModels != null)
                 {
+                    foreach (var assessment in courseModel.AssessmentModels)
+                    {
+                        if (assessment.ResultModels != null)
+                        {
+                            _context.ResultModels.RemoveRange(assessment.ResultModels);
+                        }
+                    }
+                    // Delete associated assessments
                     _context.AssessmentModels.RemoveRange(courseModel.AssessmentModels);
+                }
+
+                // Delete associated blob file if present
+                if (!string.IsNullOrEmpty(courseModel.MediaUrl))
+                {
+                    try
+                    {
+                        await _blobService.DeleteFileAsync(courseModel.MediaUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error deleting blob file: {ex.Message}");
+                    }
                 }
 
                 // Delete the course
