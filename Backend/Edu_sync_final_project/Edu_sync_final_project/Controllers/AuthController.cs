@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,10 +6,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
-using Edu_sync_final_project.Data;    // <-- Replace with your actual namespace
-using Edu_sync_final_project.Models;  // <-- Replace with your actual namespace
-using Edu_sync_final_project.DTO;    // <-- Replace with your actual namespace
+using Edu_sync_final_project.Data;    
+using Edu_sync_final_project.Models; 
+using Edu_sync_final_project.DTO;   
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.ComponentModel.DataAnnotations;
 
 namespace Edu_sync_final_project.Controllers;
 
@@ -26,20 +27,28 @@ public class AuthController : ControllerBase
         _context = context;
     }
 
-    // DTO for Login request
+    
     public class LoginRequest
     {
-        public string Email { get; set; }
-        public string Password { get; set; }
+        [Required]
+        [EmailAddress]
+        public required string Email { get; set; }
+        [Required]
+        public required string Password { get; set; }
     }
 
-    // DTO for Register request
+   
     public class RegisterUserDto
     {
-        public string FullName { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string Role { get; set; }  // "Student" or "Instructor"
+        [Required]
+        public required string FullName { get; set; }
+        [Required]
+        [EmailAddress]
+        public required string Email { get; set; }
+        [Required]
+        public required string Password { get; set; }
+        [Required]
+        public required string Role { get; set; }  
     }
 
     [HttpPost("login")]
@@ -213,20 +222,21 @@ public class AuthController : ControllerBase
 
     private string GenerateJwtToken(string email, string role)
     {
-        // Get user ID from database
-        var user = _context.UserModels.SingleOrDefault(u => u.Email == email);
-        if (user == null)
-            throw new Exception("User not found");
-
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(role))
+        {
+            throw new ArgumentException("Email and role cannot be null or empty");
+        }
+        
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // Use UserId as the subject
+            new Claim(JwtRegisteredClaimNames.Sub, email),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.Name, user.Name) // Add the user's name as a claim
+            new Claim(ClaimTypes.Name, email) 
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
+            throw new InvalidOperationException("JWT key is missing")));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
@@ -242,14 +252,13 @@ public class AuthController : ControllerBase
 
     private bool VerifyPassword(string enteredPassword, string storedHash, byte[] storedSalt)
     {
+        if (string.IsNullOrEmpty(enteredPassword) || string.IsNullOrEmpty(storedHash) || storedSalt == null)
+        {
+            return false;
+        }
+
         try
         {
-            if (storedSalt == null || storedSalt.Length == 0)
-            {
-                Console.WriteLine("Stored salt is null or empty");
-                return false;
-            }
-
             var enteredHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
                 password: enteredPassword,
                 salt: storedSalt,
