@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://icy-cliff-051462600.6.azurestaticapps.net")
+        policy.SetIsOriginAllowed(origin => true) 
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -61,10 +61,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Add Azure Blob Service
-builder.Services.AddSingleton(new AzureBlobService(
-    builder.Configuration.GetConnectionString("AzureStorage"),
-    builder.Configuration["AzureStorage:ContainerName"]
-));
+builder.Services.AddSingleton<IAzureBlobService>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("AzureStorage") 
+        ?? throw new InvalidOperationException("AzureStorage connection string is missing");
+    var containerName = configuration["AzureStorage:ContainerName"]
+        ?? throw new InvalidOperationException("Container name is missing");
+    return new AzureBlobService(connectionString, containerName);
+});
 
 // Add Event Hubs Service
 builder.Services.AddSingleton<EventHubService>();
@@ -72,7 +77,8 @@ builder.Services.AddSingleton<EventHubService>();
 
 // JWT Authentication configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? 
+    throw new InvalidOperationException("JWT key is missing"));
 
 builder.Services.AddAuthentication(options =>
 {
