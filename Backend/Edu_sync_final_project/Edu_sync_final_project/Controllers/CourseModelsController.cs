@@ -72,10 +72,23 @@ namespace Edu_sync_final_project.Controllers
         public async Task<ActionResult<CourseModel>> PostCourse([FromForm] CourseModelDTO courseModel, IFormFile file)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                return BadRequest(new { message = "Validation failed", errors });
+            }
 
             if (courseModel == null)
-                return BadRequest("Course model cannot be null");
+                return BadRequest(new { message = "Course model cannot be null" });
+
+            // Validate instructor exists
+            var instructor = await _context.UserModels.FindAsync(courseModel.InstructorId);
+            if (instructor == null)
+                return BadRequest(new { message = "Instructor not found" });
+
+            if (instructor.Role != "Instructor")
+                return BadRequest(new { message = "User is not an instructor" });
 
             // Generate a new CourseId
             courseModel.CourseId = Guid.NewGuid();
@@ -93,21 +106,29 @@ namespace Edu_sync_final_project.Controllers
                 {
                     Console.WriteLine($"Error uploading file: {ex.Message}");
                     Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                    return BadRequest($"Error uploading file: {ex.Message}");
+                    return BadRequest(new { message = $"Error uploading file: {ex.Message}" });
                 }
             }
 
             var course = new CourseModel
             {
                 CourseId = courseModel.CourseId,
-                Title = courseModel.Title ?? string.Empty,
-                Description = courseModel.Description ?? string.Empty,
+                Title = courseModel.Title,
+                Description = courseModel.Description,
                 InstructorId = courseModel.InstructorId,
                 MediaUrl = blobUrl
             };
 
-            _context.CourseModels.Add(course);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.CourseModels.Add(course);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving course: {ex.Message}");
+                return StatusCode(500, new { message = "Error saving course to database" });
+            }
 
             return CreatedAtAction("GetCourseModel", new { id = course.CourseId }, course);
         }
