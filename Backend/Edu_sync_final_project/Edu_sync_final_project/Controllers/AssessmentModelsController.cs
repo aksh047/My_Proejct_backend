@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -143,16 +143,34 @@ namespace Edu_sync_final_project.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAssessmentModel(Guid id)
         {
-            var assessmentModel = await _context.AssessmentModels.FindAsync(id);
-            if (assessmentModel == null)
+            try
             {
-                return NotFound();
+                var assessmentModel = await _context.AssessmentModels
+                    .Include(a => a.ResultModels)
+                    .FirstOrDefaultAsync(a => a.AssessmentId == id);
+
+                if (assessmentModel == null)
+                {
+                    return NotFound(new { message = "Assessment not found" });
+                }
+
+                // Delete associated results first
+                if (assessmentModel.ResultModels != null)
+                {
+                    _context.ResultModels.RemoveRange(assessmentModel.ResultModels);
+                }
+
+                // Then delete the assessment
+                _context.AssessmentModels.Remove(assessmentModel);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.AssessmentModels.Remove(assessmentModel);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting assessment: {ex.Message}");
+                return StatusCode(500, new { message = "Error deleting assessment" });
+            }
         }
 
         private bool AssessmentModelExists(Guid id)
