@@ -17,9 +17,9 @@ namespace Edu_sync_final_project.Controllers
     public class CourseModelsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly AzureBlobService _blobService;
+        private readonly IAzureBlobService _blobService;
 
-        public CourseModelsController(AppDbContext context, AzureBlobService blobService)
+        public CourseModelsController(AppDbContext context, IAzureBlobService blobService)
         {
             _context = context;
             _blobService = blobService;
