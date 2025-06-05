@@ -66,17 +66,17 @@ namespace Edu_sync_final_project.Controllers
             var results = await _context.ResultModels
                 .Include(r => r.Assessment)
                 .Include(r => r.User)
-                .Where(r => r.Assessment.CourseId == courseId)
+                .Where(r => r.Assessment != null && r.Assessment.CourseId == courseId)
                 .Select(r => new StudentResultForInstructorDTO
                 {
                     ResultId = r.ResultId,
-                    Score = r.Score.GetValueOrDefault(),
-                    AttemptDate = r.AttemptDate.GetValueOrDefault(),
-                    StudentName = r.User != null ? r.User.Name : "Unknown Student",
-                    AssessmentTitle = r.Assessment != null ? r.Assessment.Title : "Unknown Quiz",
-                    MaxScore = r.Assessment != null ? r.Assessment.MaxScore.GetValueOrDefault() : 0,
-                    StudentId = r.UserId.GetValueOrDefault(),
-                    AssessmentId = r.AssessmentId.GetValueOrDefault()
+                    Score = r.Score ?? 0,
+                    AttemptDate = r.AttemptDate ?? DateTime.UtcNow,
+                    StudentName = r.User?.Name ?? "Unknown Student",
+                    AssessmentTitle = r.Assessment?.Title ?? "Unknown Quiz",
+                    MaxScore = r.Assessment?.MaxScore ?? 0,
+                    StudentId = r.UserId ?? Guid.Empty,
+                    AssessmentId = r.AssessmentId
                 })
                 .ToListAsync();
 
@@ -135,9 +135,9 @@ namespace Edu_sync_final_project.Controllers
                 return BadRequest("Result model cannot be null");
             }
 
-            if (resultModel.StudentId == Guid.Empty)
+            if (resultModel.UserId == Guid.Empty)
             {
-                return BadRequest("Student ID is required");
+                return BadRequest("User ID is required");
             }
 
             if (resultModel.AssessmentId == Guid.Empty)
