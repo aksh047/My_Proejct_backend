@@ -70,13 +70,13 @@ namespace Edu_sync_final_project.Controllers
                 .Select(r => new StudentResultForInstructorDTO
                 {
                     ResultId = r.ResultId,
-                    Score = r.Score ?? 0,
-                    AttemptDate = r.AttemptDate ?? DateTime.UtcNow,
-                    StudentName = r.User?.Name ?? "Unknown Student",
-                    AssessmentTitle = r.Assessment?.Title ?? "Unknown Quiz",
-                    MaxScore = r.Assessment?.MaxScore ?? 0,
-                    StudentId = r.UserId ?? Guid.Empty,
-                    AssessmentId = r.AssessmentId ?? Guid.Empty
+                    Score = r.Score.HasValue ? r.Score.Value : 0,
+                    AttemptDate = r.AttemptDate.HasValue ? r.AttemptDate.Value : DateTime.UtcNow,
+                    StudentName = r.User != null ? r.User.Name : "Unknown Student",
+                    AssessmentTitle = r.Assessment != null ? r.Assessment.Title : "Unknown Quiz",
+                    MaxScore = r.Assessment != null && r.Assessment.MaxScore.HasValue ? r.Assessment.MaxScore.Value : 0,
+                    StudentId = r.UserId.HasValue ? r.UserId.Value : Guid.Empty,
+                    AssessmentId = r.AssessmentId.HasValue ? r.AssessmentId.Value : Guid.Empty
                 })
                 .ToListAsync();
 
