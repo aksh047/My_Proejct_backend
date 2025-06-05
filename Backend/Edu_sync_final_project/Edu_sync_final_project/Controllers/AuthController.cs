@@ -69,6 +69,12 @@ public class AuthController : ControllerBase
             Console.WriteLine($"Stored salt length: {user.PasswordSalt?.Length ?? 0}");
 
             // Verify password
+            if (user.PasswordHash == null || user.PasswordSalt == null)
+            {
+                Console.WriteLine("Password hash or salt is null");
+                return Unauthorized("Invalid credentials");
+            }
+
             if (!VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
             {
                 Console.WriteLine("Password verification failed");
@@ -76,7 +82,14 @@ public class AuthController : ControllerBase
             }
 
             Console.WriteLine("Password verified successfully");
-            var token = GenerateJwtToken(user.Email, user.Role);
+            if (string.IsNullOrEmpty(user.Email) || string.IsNullOrEmpty(user.Role))
+            {
+                Console.WriteLine("User email or role is null or empty");
+                return StatusCode(500, "Invalid user data");
+            }
+
+            // At this point we know email and role are not null
+            var token = GenerateJwtToken(user.Email!, user.Role!);
             Console.WriteLine("Token generated successfully");
             
             return Ok(new { token });
