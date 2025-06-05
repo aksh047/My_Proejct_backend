@@ -19,7 +19,7 @@ namespace Edu_sync_final_project.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IConfiguration _configuration;
-    private readonly AppDbContext _context;  // Your EF DbContext
+    private readonly AppDbContext _context;  
 
     public AuthController(IConfiguration configuration, AppDbContext context)
     {
@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
             }
 
             // At this point we know email and role are not null
-            var token = GenerateJwtToken(user.Email!, user.Role!);
+            var token = GenerateJwtToken(user.Email!, user.Role!, user.UserId);
             Console.WriteLine("Token generated successfully");
             
             return Ok(new { token });
@@ -200,7 +200,7 @@ public class AuthController : ControllerBase
             Console.WriteLine($"User registered successfully: {dto.Email}");
 
             // Generate token after successful registration
-            var token = GenerateJwtToken(user.Email, user.Role);
+            var token = GenerateJwtToken(user.Email, user.Role, user.UserId);
             Console.WriteLine($"Token generated: {token}");
 
             var response = new
@@ -233,7 +233,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    private string GenerateJwtToken(string email, string role)
+    private string GenerateJwtToken(string email, string role, Guid userId)
     {
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(role))
         {
@@ -242,7 +242,7 @@ public class AuthController : ControllerBase
         
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.Role, role),
             new Claim(ClaimTypes.Name, email) 
