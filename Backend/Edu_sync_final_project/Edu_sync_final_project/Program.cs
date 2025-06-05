@@ -68,7 +68,7 @@ builder.Services.AddSingleton<IAzureBlobService>(sp =>
         ?? throw new InvalidOperationException("AzureStorage connection string is missing");
     var containerName = configuration["AzureStorage:ContainerName"]
         ?? throw new InvalidOperationException("Container name is missing");
-    return (IAzureBlobService)new AzureBlobService(connectionString, containerName);
+    return new AzureBlobService(connectionString, containerName);
 });
 
 // Add Event Hubs Service
