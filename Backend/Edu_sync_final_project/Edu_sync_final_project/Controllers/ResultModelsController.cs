@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Edu_sync_final_project.Data;
 using Edu_sync_final_project.Models;
@@ -28,7 +28,7 @@ namespace Edu_sync_final_project.Controllers
             return await _context.ResultModels.ToListAsync();
         }
 
-        // GET: api/ResultModels/5
+        // GET: api/ResultModels/id
         [HttpGet("{id}")]
         public async Task<ActionResult<ResultModel>> GetResultModel(Guid id)
         {
@@ -80,9 +80,6 @@ namespace Edu_sync_final_project.Controllers
                 })
                 .ToListAsync();
 
-            // Although the query should implicitly filter by instructor's courses via the courseId,
-            // we can add an explicit check if needed, but the current structure implies this.
-            // We return an empty list if no results are found, not NotFound.
             return Ok(results);
         }
 
@@ -131,41 +128,27 @@ namespace Edu_sync_final_project.Controllers
         // POST: api/ResultModels
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ResultModel>> PostResult(ResultModelDTO result)
+        public async Task<ActionResult<ResultModel>> PostResultModel(ResultModel resultModel)
         {
-            //result.ResultId = Guid.NewGuid();
-            ResultModel orignalResult = new ResultModel()
+            if (resultModel == null)
             {
-                ResultId = result.ResultId,
-                AssessmentId = result.AssessmentId,
-                UserId = result.UserId,
-                Score = result.Score,
-                AttemptDate = result.AttemptDate
-            };
-
-            _context.ResultModels.Add(orignalResult);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-
-                // Send event to Event Hubs after successful save
-                var eventData = new { orignalResult.ResultId, orignalResult.AssessmentId, orignalResult.UserId, orignalResult.Score, orignalResult.AttemptDate };
-                await _eventHubService.SendEventAsync(eventData, "ResultSubmitted");
-            }
-            catch (DbUpdateException)
-            {
-                if (ResultModelExists(orignalResult.ResultId))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest("Result model cannot be null");
             }
 
-            return CreatedAtAction("GetResultModel", new { id = orignalResult.ResultId }, orignalResult);
+            if (resultModel.StudentId == Guid.Empty)
+            {
+                return BadRequest("Student ID is required");
+            }
+
+            if (resultModel.AssessmentId == Guid.Empty)
+            {
+                return BadRequest("Assessment ID is required");
+            }
+
+            _context.ResultModels.Add(resultModel);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetResultModel", new { id = resultModel.ResultId }, resultModel);
         }
 
         // DELETE: api/ResultModels/5
