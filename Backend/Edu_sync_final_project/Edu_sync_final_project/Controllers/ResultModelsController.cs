@@ -76,7 +76,7 @@ namespace Edu_sync_final_project.Controllers
                     AssessmentTitle = r.Assessment?.Title ?? "Unknown Quiz",
                     MaxScore = r.Assessment?.MaxScore ?? 0,
                     StudentId = r.UserId ?? Guid.Empty,
-                    AssessmentId = r.AssessmentId
+                    AssessmentId = r.AssessmentId ?? Guid.Empty
                 })
                 .ToListAsync();
 
