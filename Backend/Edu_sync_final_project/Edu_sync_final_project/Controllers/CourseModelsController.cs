@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -173,16 +173,36 @@ namespace Edu_sync_final_project.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCourseModel(Guid id)
         {
-            var courseModel = await _context.CourseModels.FindAsync(id);
-            if (courseModel == null)
+            try
             {
-                return NotFound();
+                var courseModel = await _context.CourseModels
+                    .Include(c => c.AssessmentModels)
+                    .FirstOrDefaultAsync(c => c.CourseId == id);
+
+                if (courseModel == null)
+                {
+                    return NotFound();
+                }
+
+                // Delete associated assessments first
+                if (courseModel.AssessmentModels != null)
+                {
+                    _context.AssessmentModels.RemoveRange(courseModel.AssessmentModels);
+                }
+
+                // Delete the course
+                _context.CourseModels.Remove(courseModel);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.CourseModels.Remove(courseModel);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Error deleting course: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, "An error occurred while deleting the course. Please try again later.");
+            }
         }
 
         private bool CourseModelExists(Guid id)
