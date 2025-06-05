@@ -70,13 +70,13 @@ namespace Edu_sync_final_project.Controllers
                 .Select(r => new StudentResultForInstructorDTO
                 {
                     ResultId = r.ResultId,
-                    Score = r.Score.HasValue ? r.Score.Value : 0,
-                    AttemptDate = r.AttemptDate.HasValue ? r.AttemptDate.Value : DateTime.UtcNow,
+                    Score = r.Score ?? 0,
+                    AttemptDate = r.AttemptDate ?? DateTime.UtcNow,
                     StudentName = r.User != null ? r.User.Name : "Unknown Student",
                     AssessmentTitle = r.Assessment != null ? r.Assessment.Title : "Unknown Quiz",
                     MaxScore = r.Assessment != null && r.Assessment.MaxScore.HasValue ? r.Assessment.MaxScore.Value : 0,
-                    StudentId = r.UserId.HasValue ? r.UserId.Value : Guid.Empty,
-                    AssessmentId = r.AssessmentId.HasValue ? r.AssessmentId.Value : Guid.Empty
+                    StudentId = r.UserId ?? Guid.Empty,
+                    AssessmentId = r.AssessmentId ?? Guid.Empty
                 })
                 .ToListAsync();
 
@@ -100,10 +100,10 @@ namespace Edu_sync_final_project.Controllers
             }
 
             // Map properties from DTO to entity, using null checks/coalescing where necessary
-            originalResult.AssessmentId = resultModel.AssessmentId; // Assuming AssessmentId is non-nullable Guid
-            originalResult.UserId = resultModel.StudentId; // Map StudentId from DTO to UserId on entity
-            originalResult.Score = resultModel.Score; // Assuming Score is nullable double
-            originalResult.AttemptDate = resultModel.AttemptDate; // Assuming AttemptDate is nullable DateTime
+            originalResult.AssessmentId = resultModel.AssessmentId;
+            originalResult.UserId = resultModel.UserId;
+            originalResult.Score = resultModel.Score;
+            originalResult.AttemptDate = resultModel.AttemptDate;
 
             _context.Entry(originalResult).State = EntityState.Modified;
 
