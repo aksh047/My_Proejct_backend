@@ -61,14 +61,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Add Azure Blob Service
-builder.Services.AddSingleton<IAzureBlobService>(sp =>
+builder.Services.AddSingleton<AzureBlobService>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var connectionString = configuration.GetConnectionString("AzureStorage") 
         ?? throw new InvalidOperationException("AzureStorage connection string is missing");
     var containerName = configuration["AzureStorage:ContainerName"]
         ?? throw new InvalidOperationException("Container name is missing");
-    return (IAzureBlobService)new AzureBlobService(connectionString, containerName);
+    return new AzureBlobService(connectionString, containerName);
 });
 
 // Add Event Hubs Service
