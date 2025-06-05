@@ -92,18 +92,20 @@ namespace Edu_sync_final_project.Controllers
             {
                 return BadRequest();
             }
-            
 
-            ResultModel orignalResult = new ResultModel()
+            var originalResult = await _context.ResultModels.FindAsync(id);
+            if (originalResult == null)
             {
-                ResultId = resultModel.ResultId,
-                AssessmentId = resultModel.AssessmentId,
-                UserId = resultModel.UserId,
-                Score = resultModel.Score,
-                AttemptDate = resultModel.AttemptDate
-            };
+                return NotFound();
+            }
 
-            _context.Entry(orignalResult).State = EntityState.Modified;
+            // Map properties from DTO to entity, using null checks/coalescing where necessary
+            originalResult.AssessmentId = resultModel.AssessmentId; // Assuming AssessmentId is non-nullable Guid
+            originalResult.UserId = resultModel.StudentId; // Map StudentId from DTO to UserId on entity
+            originalResult.Score = resultModel.Score; // Assuming Score is nullable double
+            originalResult.AttemptDate = resultModel.AttemptDate; // Assuming AttemptDate is nullable DateTime
+
+            _context.Entry(originalResult).State = EntityState.Modified;
 
             try
             {
