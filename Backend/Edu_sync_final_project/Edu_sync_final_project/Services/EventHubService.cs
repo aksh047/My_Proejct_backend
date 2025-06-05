@@ -9,15 +9,28 @@ namespace Edu_sync_final_project.Services
 {
     public class EventHubService
     {
+        private readonly string _connectionString;
+        private readonly string _eventHubName;
         private readonly EventHubProducerClient _producerClient;
         private readonly ILogger<EventHubService> _logger;
 
         public EventHubService(IConfiguration configuration, ILogger<EventHubService> logger)
         {
-            string connectionString = configuration["AzureEventHubs:ConnectionString"];
-            string eventHubName = configuration["AzureEventHubs:EventHubName"];
+            var connectionString = configuration["AzureEventHubs:ConnectionString"];
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new InvalidOperationException("Azure Event Hubs connection string is missing");
+            }
+            _connectionString = connectionString;
 
-            _producerClient = new EventHubProducerClient(connectionString, eventHubName);
+            var eventHubName = configuration["AzureEventHubs:EventHubName"];
+            if (string.IsNullOrEmpty(eventHubName))
+            {
+                throw new InvalidOperationException("Azure Event Hubs name is missing");
+            }
+            _eventHubName = eventHubName;
+
+            _producerClient = new EventHubProducerClient(_connectionString, _eventHubName);
             _logger = logger;
         }
 
