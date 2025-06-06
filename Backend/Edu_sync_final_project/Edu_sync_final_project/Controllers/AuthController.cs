@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
             }
 
             // At this point we know email and role are not null
-            var token = GenerateJwtToken(user.Email!, user.Role!, user.UserId);
+            var token = GenerateJwtToken(user.Email!, user.Role!, user.UserId, user.Name);
             Console.WriteLine("Token generated successfully");
             
             return Ok(new { token });
@@ -200,7 +200,7 @@ public class AuthController : ControllerBase
             Console.WriteLine($"User registered successfully: {dto.Email}");
 
             // Generate token after successful registration
-            var token = GenerateJwtToken(user.Email, user.Role, user.UserId);
+            var token = GenerateJwtToken(user.Email, user.Role, user.UserId, user.Name);
             Console.WriteLine($"Token generated: {token}");
 
             var response = new
@@ -233,7 +233,7 @@ public class AuthController : ControllerBase
         }
     }
 
-    private string GenerateJwtToken(string email, string role, Guid userId)
+    private string GenerateJwtToken(string email, string role, Guid userId, string name)
     {
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(role))
         {
@@ -245,7 +245,8 @@ public class AuthController : ControllerBase
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.Name, email) 
+            new Claim(ClaimTypes.Name, name ?? email),
+            new Claim("fullName", name ?? "")
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
